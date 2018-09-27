@@ -784,6 +784,7 @@ func TestAutoMergeRows(t *testing.T) {
 		table.Append(v)
 	}
 	table.SetAutoMergeCells(true)
+	table.SetRowLine(true)
 	table.Render()
 	want := `+------+-----------------------+--------+
 | NAME |         SIGN          | RATING |

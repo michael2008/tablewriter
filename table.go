@@ -48,37 +48,38 @@ type Border struct {
 }
 
 type Table struct {
-	out            io.Writer
-	rows           [][]string
-	lines          [][][]string
-	cs             map[int]int
-	rs             map[int]int
-	headers        [][]string
-	footers        [][]string
-	caption        bool
-	captionText    string
-	autoFmt        bool
-	autoWrap       bool
-	reflowText     bool
-	mW             int
-	pCenter        string
-	pRow           string
-	pColumn        string
-	tColumn        int
-	tRow           int
-	hAlign         int
-	fAlign         int
-	align          int
-	newLine        string
-	rowLine        bool
-	autoMergeCells bool
-	hdrLine        bool
-	borders        Border
-	colSize        int
-	headerParams   []string
-	columnsParams  []string
-	footerParams   []string
-	columnsAlign   []int
+	out             io.Writer
+	rows            [][]string
+	lines           [][][]string
+	cs              map[int]int
+	rs              map[int]int
+	headers         [][]string
+	footers         [][]string
+	caption         bool
+	captionText     string
+	autoFmt         bool
+	autoWrap        bool
+	reflowText      bool
+	mW              int
+	pCenter         string
+	pRow            string
+	pColumn         string
+	tColumn         int
+	tRow            int
+	hAlign          int
+	fAlign          int
+	align           int
+	newLine         string
+	rowLine         bool
+	autoMergeCells  bool
+	skipMergeColMap map[int]struct{}
+	hdrLine         bool
+	borders         Border
+	colSize         int
+	headerParams    []string
+	columnsParams   []string
+	footerParams    []string
+	columnsAlign    []int
 }
 
 // Start New Table
@@ -262,6 +263,15 @@ func (t *Table) SetRowLine(line bool) {
 // This would enable / disable the merge of cells with identical values
 func (t *Table) SetAutoMergeCells(auto bool) {
 	t.autoMergeCells = auto
+}
+
+// Set Skip Cols for Merging
+func (t *Table) SetAutoMergeSkipCols(skipCols []int) {
+	var mp = map[int]struct{}{}
+	for _, v := range skipCols {
+		mp[v] = struct{}{}
+	}
+	t.skipMergeColMap = mp
 }
 
 // Set Table Border
@@ -730,7 +740,7 @@ func (t *Table) printRowMergeCells(writer io.Writer, columns [][]string, rowIdx 
 			if t.autoMergeCells {
 				//Store the full line to merge mutli-lines cells
 				fullLine := strings.Join(columns[y], " ")
-				if len(previousLine) > y && fullLine == previousLine[y] && fullLine != "" {
+				if _, skip := t.skipMergeColMap[y]; !skip && len(previousLine) > y && fullLine == previousLine[y] && fullLine != "" {
 					// If this cell is identical to the one above but not empty, we don't display the border and keep the cell empty.
 					displayCellBorder = append(displayCellBorder, false)
 					str = ""
